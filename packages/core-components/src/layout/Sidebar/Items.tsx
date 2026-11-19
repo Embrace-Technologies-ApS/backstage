@@ -291,6 +291,11 @@ type SidebarItemBaseProps = {
   className?: string;
   noTrack?: boolean;
   onClick?: (ev: MouseEvent) => void;
+  /**
+   * Overrides whether the item is highlighted as active. When omitted, the item
+   * is highlighted when its route matches the current location.
+   */
+  isActive?: boolean;
 };
 
 type SidebarItemButtonProps = SidebarItemBaseProps & {
@@ -336,6 +341,7 @@ export const WorkaroundNavLink = forwardRef<
     children?: ReactNode;
     activeStyle?: CSSProperties;
     activeClassName?: string;
+    isActive?: boolean;
   }
 >(function WorkaroundNavLinkWithRef(
   {
@@ -346,6 +352,7 @@ export const WorkaroundNavLink = forwardRef<
     activeStyle,
     caseSensitive,
     activeClassName = 'active',
+    isActive: isActiveOverride,
     'aria-current': ariaCurrentProp = 'page',
     ...rest
   },
@@ -359,12 +366,13 @@ export const WorkaroundNavLink = forwardRef<
     toPathname = toPathname.toLowerCase();
   }
 
-  let isActive = locationPathname === toPathname;
-  if (!isActive && !end) {
+  let isRouteActive = locationPathname === toPathname;
+  if (!isRouteActive && !end) {
     // This is the behavior that is different from the original NavLink
-    isActive = locationPathname.startsWith(`${toPathname}/`);
+    isRouteActive = locationPathname.startsWith(`${toPathname}/`);
   }
 
+  const isActive = isActiveOverride ?? isRouteActive;
   const ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
   return (
@@ -399,6 +407,7 @@ const SidebarItemBase = forwardRef<
     noTrack,
     children,
     className,
+    isActive,
     ...navLinkProps
   } = props;
   const { sidebarConfig } = useContext(SidebarConfigContext);
@@ -501,6 +510,7 @@ const SidebarItemBase = forwardRef<
     <WorkaroundNavLink
       {...childProps}
       activeClassName={classes.selected}
+      isActive={isActive}
       to={props.to ? props.to : ''}
       ref={ref}
       aria-label={text ? text : props.to}
@@ -514,6 +524,7 @@ const SidebarItemBase = forwardRef<
 
 const SidebarItemWithSubmenu = ({
   children,
+  isActive: isActiveOverride,
   ...props
 }: SidebarItemBaseProps & {
   children: ReactElement<SidebarSubmenuProps>;
@@ -522,7 +533,8 @@ const SidebarItemWithSubmenu = ({
   const classes = useMemoStyles(sidebarConfig);
   const [isHoveredOn, setIsHoveredOn] = useState(false);
   const location = useLocation();
-  const isActive = useLocationMatch(children, location);
+  const isLocationActive = useLocationMatch(children, location);
+  const isActive = isActiveOverride ?? isLocationActive;
   const isSmallScreen = useMediaQuery((theme: Theme) =>
     theme.breakpoints.down('sm'),
   );

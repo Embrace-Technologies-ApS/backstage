@@ -25,6 +25,8 @@ import HomeIcon from '@material-ui/icons/Home';
 import CreateComponentIcon from '@material-ui/icons/AddCircleOutline';
 import { Sidebar } from './Bar';
 import { SidebarItem, SidebarSearchField, SidebarExpandButton } from './Items';
+import { SidebarSubmenu } from './SidebarSubmenu';
+import { SidebarSubmenuItem } from './SidebarSubmenuItem';
 import { renderHook } from '@testing-library/react';
 import { makeStyles } from '@material-ui/core/styles';
 import { analyticsApiRef } from '@backstage/core-plugin-api';
@@ -140,5 +142,74 @@ describe('Items', () => {
       fireEvent(await screen.findByPlaceholderText('Search'), searchEvent);
       expect(searchEvent.defaultPrevented).toBeTruthy();
     });
+  });
+});
+
+describe('SidebarItem isActive', () => {
+  it('should highlight links and submenu parents by route match unless isActive is given', async () => {
+    await renderInTestApp(
+      <Sidebar>
+        <SidebarItem
+          icon={HomeIcon}
+          to="/catalog?filters[kind]=Component"
+          text="Components"
+        />
+        <SidebarItem
+          icon={HomeIcon}
+          to="/catalog?filters[kind]=API"
+          text="APIs"
+          isActive={false}
+        />
+        <SidebarItem icon={HomeIcon} to="/docs" text="Docs" isActive />
+        <SidebarItem icon={HomeIcon} to="/explore" text="Explore" />
+        <SidebarItem icon={HomeIcon} text="Catalog Menu">
+          <SidebarSubmenu title="Catalog">
+            <SidebarSubmenuItem title="Catalog" to="/catalog" />
+          </SidebarSubmenu>
+        </SidebarItem>
+        <SidebarItem icon={HomeIcon} text="Catalog Menu Off" isActive={false}>
+          <SidebarSubmenu title="Catalog">
+            <SidebarSubmenuItem title="Catalog" to="/catalog" />
+          </SidebarSubmenu>
+        </SidebarItem>
+        <SidebarItem icon={HomeIcon} text="Templates Menu">
+          <SidebarSubmenu title="Templates">
+            <SidebarSubmenuItem title="Templates" to="/templates" />
+          </SidebarSubmenu>
+        </SidebarItem>
+        <SidebarItem icon={HomeIcon} text="Docs Menu" isActive>
+          <SidebarSubmenu title="Docs">
+            <SidebarSubmenuItem title="Docs" to="/docs/intro" />
+          </SidebarSubmenu>
+        </SidebarItem>
+      </Sidebar>,
+      { routeEntries: ['/catalog?filters[kind]=Component'] },
+    );
+
+    const selectedClass = 'BackstageSidebarItem-selected';
+    expect(
+      screen.getByRole('link', { name: 'Components' }).className,
+    ).toContain(selectedClass);
+    expect(screen.getByRole('link', { name: 'APIs' }).className).not.toContain(
+      selectedClass,
+    );
+    expect(screen.getByRole('link', { name: 'Docs' }).className).toContain(
+      selectedClass,
+    );
+    expect(
+      screen.getByRole('link', { name: 'Explore' }).className,
+    ).not.toContain(selectedClass);
+    expect(
+      screen.getByRole('button', { name: 'Catalog Menu' }).className,
+    ).toContain(selectedClass);
+    expect(
+      screen.getByRole('button', { name: 'Catalog Menu Off' }).className,
+    ).not.toContain(selectedClass);
+    expect(
+      screen.getByRole('button', { name: 'Templates Menu' }).className,
+    ).not.toContain(selectedClass);
+    expect(
+      screen.getByRole('button', { name: 'Docs Menu' }).className,
+    ).toContain(selectedClass);
   });
 });

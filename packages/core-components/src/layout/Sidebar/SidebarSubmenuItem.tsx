@@ -137,6 +137,7 @@ export type SidebarSubmenuItemDropdownItem = {
  * to: Path to navigate to when item is clicked
  * icon: Icon displayed on the left of text content
  * dropdownItems: Optional array of dropdown items displayed when submenu item is clicked.
+ * isActive: Optional override for the highlighted state. When omitted, the item is highlighted when its route matches the current location.
  *
  * @public
  */
@@ -148,6 +149,7 @@ export type SidebarSubmenuItemProps = {
   dropdownItems?: SidebarSubmenuItemDropdownItem[];
   exact?: boolean;
   initialShowDropdown?: boolean;
+  isActive?: boolean;
 };
 
 /**
@@ -156,7 +158,15 @@ export type SidebarSubmenuItemProps = {
  * @public
  */
 export const SidebarSubmenuItem = (props: SidebarSubmenuItemProps) => {
-  const { title, subtitle, to, icon: Icon, dropdownItems, exact } = props;
+  const {
+    title,
+    subtitle,
+    to,
+    icon: Icon,
+    dropdownItems,
+    exact,
+    isActive: isActiveOverride,
+  } = props;
   const classes = useStyles();
   const { setIsHoveredOn } = useContext(SidebarItemWithSubmenuContext);
   const closeSubmenu = () => {
@@ -188,7 +198,7 @@ export const SidebarSubmenuItem = (props: SidebarSubmenuItemProps) => {
             className={classnames(
               classes.item,
               classes.dropdownButton,
-              isActive ? classes.selected : undefined,
+              isActiveOverride ?? isActive ? classes.selected : undefined,
             )}
           >
             {Icon && <Icon fontSize="small" />}
@@ -252,7 +262,7 @@ export const SidebarSubmenuItem = (props: SidebarSubmenuItemProps) => {
           underline="none"
           className={classnames(
             classes.item,
-            isActive ? classes.selected : undefined,
+            isActiveOverride ?? isActive ? classes.selected : undefined,
           )}
           onClick={closeSubmenu}
           onTouchStart={e => e.stopPropagation()}

@@ -229,6 +229,39 @@ describe('defaultScmResolveUrl', () => {
     );
   });
 
+  it('resolves root-relative urls to the repo root when the base file path is encoded', () => {
+    expect(
+      defaultScmResolveUrl({
+        url: '/catalog-info.yaml',
+        base: 'https://gitlab.com/owner/repo/-/blob/main/docs/my%20file.md',
+      }),
+    ).toBe('https://gitlab.com/owner/repo/-/blob/main/catalog-info.yaml');
+
+    expect(
+      defaultScmResolveUrl({
+        url: '/catalog-info.yaml',
+        base: 'https://gitlab.com/owner/repo/-/blob/main/docs/a%23b.md',
+      }),
+    ).toBe('https://gitlab.com/owner/repo/-/blob/main/catalog-info.yaml');
+
+    expect(
+      defaultScmResolveUrl({
+        url: '/catalog-info.yaml',
+        base: 'https://gitlab.com/owner/repo/-/blob/main/docs/café.md',
+      }),
+    ).toBe('https://gitlab.com/owner/repo/-/blob/main/catalog-info.yaml');
+
+    expect(
+      defaultScmResolveUrl({
+        url: '/catalog-info.yaml',
+        base: 'https://gitlab.com/owner/repo/-/blob/main/docs/my%20file.md?at=master',
+        lineNumber: 3,
+      }),
+    ).toBe(
+      'https://gitlab.com/owner/repo/-/blob/main/catalog-info.yaml?at=master#L3',
+    );
+  });
+
   it('works for absolute paths and retains query params', () => {
     expect(
       defaultScmResolveUrl({

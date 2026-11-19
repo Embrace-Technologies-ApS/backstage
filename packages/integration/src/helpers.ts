@@ -94,6 +94,11 @@ export function basicIntegrations<T extends ScmIntegration>(
  * Default implementation of {@link ScmIntegration} `resolveUrl`, that only
  * works with URL pathname based providers.
  *
+ * Root-relative URLs (starting with `/`) are resolved against the repository
+ * root, which is derived from the base URL by removing the file path segments
+ * from its pathname. Encoded characters in the file path, such as `%20`, `%23`
+ * or UTF-8 sequences, are handled correctly.
+ *
  * @public
  */
 export function defaultScmResolveUrl(options: {
@@ -120,8 +125,13 @@ export function defaultScmResolveUrl(options: {
 
     updated = new URL(href);
 
+    // The filepath is decoded while the pathname is still percent-encoded, so
+    // the root is derived by dropping the same number of path segments instead
+    // of subtracting lengths.
+    const filepathSegments = filepath ? filepath.split('/').length : 0;
+    const pathSegments = updated.pathname.split('/');
     const repoRootPath = lodash.trimEnd(
-      updated.pathname.substring(0, updated.pathname.length - filepath.length),
+      pathSegments.slice(0, pathSegments.length - filepathSegments).join('/'),
       '/',
     );
     updated.pathname = `${repoRootPath}${url}`;

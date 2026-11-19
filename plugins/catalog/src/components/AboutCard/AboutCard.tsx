@@ -65,6 +65,7 @@ import { useSourceTemplateCompoundEntityRef } from './hooks';
 import { AboutContent } from './AboutContent';
 import { makeStyles } from '@material-ui/core/styles';
 import { useCatalogSourceIconLinkProps } from './useCatalogSourceIconLinkProps';
+import { CopyEntityRefButton } from './CopyEntityRefButton';
 
 const useStyles = makeStyles({
   linkContainer: {
@@ -186,6 +187,7 @@ export function InternalAboutCard(props: InternalAboutCardProps) {
               <CachedIcon />
             </IconButton>
           )}
+          <CopyEntityRefButton />
           <IconButton
             component={Link}
             aria-label={t('aboutCard.editButtonAriaLabel')}

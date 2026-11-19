@@ -1281,6 +1281,7 @@ export type SidebarSubmenuItemProps = {
   dropdownItems?: SidebarSubmenuItemDropdownItem[];
   exact?: boolean;
   initialShowDropdown?: boolean;
+  isActive?: boolean;
 };
 
 // @public

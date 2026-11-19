@@ -142,6 +142,61 @@ describe('Sidebar', () => {
     });
   });
 
+  describe('SidebarSubmenuItem isActive', () => {
+    it('should highlight submenu items by route match unless isActive is given', async () => {
+      await renderInTestApp(
+        <Sidebar disableExpandOnHover>
+          <SidebarItem icon={MenuBookIcon} onClick={() => {}} text="Catalog">
+            <SidebarSubmenu title="Catalog">
+              <SidebarSubmenuItem title="Catalog Default" to="/catalog" />
+              <SidebarSubmenuItem
+                title="Catalog Off"
+                to="/catalog"
+                isActive={false}
+              />
+              <SidebarSubmenuItem title="Docs On" to="/docs" isActive />
+              <SidebarSubmenuItem title="Docs Default" to="/docs" />
+              <SidebarSubmenuItem
+                title="Dropdown Off"
+                to="/catalog"
+                isActive={false}
+                dropdownItems={[{ title: 'Dropdown Link', to: '/catalog' }]}
+              />
+              <SidebarSubmenuItem
+                title="Dropdown On"
+                to="/docs"
+                isActive
+                dropdownItems={[{ title: 'Dropdown Link 2', to: '/docs' }]}
+              />
+            </SidebarSubmenu>
+          </SidebarItem>
+        </Sidebar>,
+        { routeEntries: ['/catalog'] },
+      );
+      await userEvent.hover(screen.getByTestId('item-with-submenu'));
+
+      const selectedClass = 'BackstageSidebarSubmenuItem-selected';
+      expect(
+        screen.getByRole('link', { name: 'Catalog Default' }).className,
+      ).toContain(selectedClass);
+      expect(
+        screen.getByRole('link', { name: 'Catalog Off' }).className,
+      ).not.toContain(selectedClass);
+      expect(screen.getByRole('link', { name: 'Docs On' }).className).toContain(
+        selectedClass,
+      );
+      expect(
+        screen.getByRole('link', { name: 'Docs Default' }).className,
+      ).not.toContain(selectedClass);
+      expect(
+        screen.getByRole('button', { name: 'Dropdown Off' }).className,
+      ).not.toContain(selectedClass);
+      expect(
+        screen.getByRole('button', { name: 'Dropdown On' }).className,
+      ).toContain(selectedClass);
+    });
+  });
+
   describe('Submenu', () => {
     afterEach(() => {
       jest.useRealTimers();

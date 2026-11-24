@@ -35,7 +35,8 @@ export const catalogTranslationRef = createTranslationRef({
       editButtonTitle: 'Edit Metadata',
       editButtonAriaLabel: 'Edit',
       createSimilarButtonTitle: 'Create something similar',
-      refreshScheduledMessage: 'Refresh scheduled',
+      refreshScheduledMessage:
+        'Refresh scheduled. Changes can take a few minutes to appear.',
       refreshButtonAriaLabel: 'Refresh',
       launchTemplate: 'Launch Template',
       viewTechdocs: 'View TechDocs',

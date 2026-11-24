@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { screen } from '@testing-library/react';
-import { renderTestApp } from '@backstage/frontend-test-utils';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { mockApis, renderTestApp } from '@backstage/frontend-test-utils';
 import { GroupEntity, UserEntity } from '@backstage/catalog-model';
 import {
   createTestEntityPage,
@@ -110,6 +111,44 @@ describe('org plugin entity cards', () => {
       expect(
         await screen.findByText('platform@example.com'),
       ).toBeInTheDocument();
+    });
+
+    it('shows the full refresh message after a successful refresh', async () => {
+      const alertApi = mockApis.alert();
+      const entity: GroupEntity = {
+        apiVersion: 'backstage.io/v1alpha1',
+        kind: 'Group',
+        metadata: {
+          name: 'platform-team',
+          namespace: 'default',
+          annotations: {
+            'backstage.io/managed-by-location':
+              'url:https://example.com/catalog-info.yaml',
+          },
+        },
+        spec: {
+          type: 'team',
+          children: [],
+        },
+      };
+
+      renderTestApp({
+        extensions: [createTestEntityPage({ entity }), EntityGroupProfileCard],
+        apis: [catalogApiMock.mock(), alertApi],
+      });
+
+      await userEvent.click(
+        await screen.findByTitle('Schedule entity refresh'),
+      );
+
+      await waitFor(() =>
+        expect(alertApi.getAlerts()).toContainEqual({
+          message:
+            'Refresh scheduled. Changes can take a few minutes to appear.',
+          severity: 'info',
+          display: 'transient',
+        }),
+      );
     });
   });
 

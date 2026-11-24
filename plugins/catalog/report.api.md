@@ -267,7 +267,7 @@ export const catalogTranslationRef: TranslationRef<
     readonly 'aboutCard.editButtonTitle': 'Edit Metadata';
     readonly 'aboutCard.editButtonAriaLabel': 'Edit';
     readonly 'aboutCard.createSimilarButtonTitle': 'Create something similar';
-    readonly 'aboutCard.refreshScheduledMessage': 'Refresh scheduled';
+    readonly 'aboutCard.refreshScheduledMessage': 'Refresh scheduled. Changes can take a few minutes to appear.';
     readonly 'aboutCard.refreshButtonAriaLabel': 'Refresh';
     readonly 'aboutCard.launchTemplate': 'Launch Template';
     readonly 'aboutCard.viewSource': 'View Source';

@@ -95,7 +95,7 @@ export const GroupProfileCard = (props: { showLinks?: boolean }) => {
   const refreshEntity = useCallback(async () => {
     await catalogApi.refreshEntity(stringifyEntityRef(group));
     alertApi.post({
-      message: 'Refresh scheduled',
+      message: 'Refresh scheduled. Changes can take a few minutes to appear.',
       severity: 'info',
       display: 'transient',
     });

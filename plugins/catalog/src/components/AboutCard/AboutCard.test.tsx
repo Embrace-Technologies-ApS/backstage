@@ -29,6 +29,8 @@ import {
   mockApis,
   renderInTestApp,
 } from '@backstage/test-utils';
+import { alertApiRef } from '@backstage/core-plugin-api';
+import { mockApis as frontendMockApis } from '@backstage/frontend-test-utils';
 import { createFromTemplateRouteRef, viewTechDocRouteRef } from '../../routes';
 
 import { AboutCard } from './AboutCard';
@@ -440,6 +442,59 @@ describe('<AboutCard />', () => {
 
     expect(catalogApi.refreshEntity).toHaveBeenCalledWith(
       'component:default/software',
+    );
+  });
+
+  it('shows the full refresh message after a successful refresh', async () => {
+    const alertApi = frontendMockApis.alert();
+    const entity = {
+      apiVersion: 'v1',
+      kind: 'Component',
+      metadata: {
+        annotations: {
+          'backstage.io/managed-by-location':
+            'url:https://backstage.io/catalog-info.yaml',
+        },
+        name: 'software-refresh-message',
+      },
+      spec: {
+        owner: 'guest',
+        type: 'service',
+        lifecycle: 'production',
+      },
+    };
+
+    await renderInTestApp(
+      <TestApiProvider
+        apis={[
+          [
+            scmIntegrationsApiRef,
+            ScmIntegrationsApi.fromConfig(new ConfigReader({})),
+          ],
+          [catalogApiRef, catalogApi],
+          [permissionApiRef, mockApis.permission()],
+          [alertApiRef, alertApi],
+        ]}
+      >
+        <EntityProvider entity={entity}>
+          <AboutCard />
+        </EntityProvider>
+      </TestApiProvider>,
+      {
+        mountedRoutes: {
+          '/catalog/:namespace/:kind/:name': entityRouteRef,
+        },
+      },
+    );
+
+    await userEvent.click(screen.getByTitle('Schedule entity refresh'));
+
+    await waitFor(() =>
+      expect(alertApi.getAlerts()).toContainEqual({
+        message: 'Refresh scheduled. Changes can take a few minutes to appear.',
+        severity: 'info',
+        display: 'transient',
+      }),
     );
   });
 

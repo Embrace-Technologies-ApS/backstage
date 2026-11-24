@@ -14,20 +14,34 @@
  * limitations under the License.
  */
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderInTestApp, TestApiProvider } from '@backstage/test-utils';
 import { alertApiRef } from '@backstage/core-plugin-api';
 import { EntityProvider } from '@backstage/plugin-catalog-react';
 import { CopyEntityRefButton } from './CopyEntityRefButton';
 
-describe('CopyEntityRefButton', () => {
-  it('renders the copy button', async () => {
-    const entity = {
-      apiVersion: 'backstage.io/v1alpha1',
-      kind: 'Component',
-      metadata: { name: 'my-service', namespace: 'default' },
-    };
+const entity = {
+  apiVersion: 'backstage.io/v1alpha1',
+  kind: 'Component',
+  metadata: { name: 'my-service', namespace: 'default' },
+};
 
+describe('CopyEntityRefButton', () => {
+  const originalClipboard = Object.getOwnPropertyDescriptor(
+    window.navigator,
+    'clipboard',
+  );
+
+  afterEach(() => {
+    if (originalClipboard) {
+      Object.defineProperty(window.navigator, 'clipboard', originalClipboard);
+    } else {
+      delete (window.navigator as { clipboard?: unknown }).clipboard;
+    }
+  });
+
+  it('renders the copy button', async () => {
     await renderInTestApp(
       <TestApiProvider apis={[[alertApiRef, { post: jest.fn() }]]}>
         <EntityProvider entity={entity}>
@@ -37,5 +51,60 @@ describe('CopyEntityRefButton', () => {
     );
 
     expect(screen.getByTitle('Copy entity ref')).toBeInTheDocument();
+  });
+
+  it('writes the entity ref to the clipboard and posts a success alert', async () => {
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.defineProperty(window.navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    const alertApi = { post: jest.fn() };
+
+    await renderInTestApp(
+      <TestApiProvider apis={[[alertApiRef, alertApi]]}>
+        <EntityProvider entity={entity}>
+          <CopyEntityRefButton />
+        </EntityProvider>
+      </TestApiProvider>,
+    );
+
+    await userEvent.click(screen.getByTitle('Copy entity ref'));
+
+    await waitFor(() => {
+      expect(alertApi.post).toHaveBeenCalledWith({
+        message: 'Copied component/default:my-service',
+        severity: 'success',
+        display: 'transient',
+      });
+    });
+    expect(writeText).toHaveBeenCalledWith('component/default:my-service');
+  });
+
+  it('posts an error alert and no success alert when the clipboard write fails', async () => {
+    const writeText = jest.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(window.navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    });
+    const alertApi = { post: jest.fn() };
+
+    await renderInTestApp(
+      <TestApiProvider apis={[[alertApiRef, alertApi]]}>
+        <EntityProvider entity={entity}>
+          <CopyEntityRefButton />
+        </EntityProvider>
+      </TestApiProvider>,
+    );
+
+    await userEvent.click(screen.getByTitle('Copy entity ref'));
+
+    await waitFor(() => {
+      expect(alertApi.post).toHaveBeenCalledWith({
+        message: 'Could not copy entity ref',
+        severity: 'error',
+      });
+    });
+    expect(alertApi.post).toHaveBeenCalledTimes(1);
   });
 });

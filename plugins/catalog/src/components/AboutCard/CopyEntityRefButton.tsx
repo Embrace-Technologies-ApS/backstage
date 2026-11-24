@@ -33,7 +33,7 @@ export function CopyEntityRefButton() {
       entity.metadata.name
     }`;
     try {
-      navigator.clipboard.writeText(ref);
+      await window.navigator.clipboard.writeText(ref);
       alertApi.post({
         message: `Copied ${ref}`,
         severity: 'success',
